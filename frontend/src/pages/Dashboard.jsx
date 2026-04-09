@@ -1,14 +1,21 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserBookings } from '@/mocks/bookings';
+import { getMyBooking } from '@/api/bookings';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const bookings = getUserBookings(user?.id);
+  const [bookings, setBookings] = useState([]);
 
   const isHost = user?.role === 'host' || user?.role === 'admin';
+
+  useEffect(() => {
+    getMyBooking('mine')
+      .then((res) => setBookings(res?.data ?? []))
+      .catch(() => setBookings([]));
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-12">
@@ -90,27 +97,26 @@ export default function Dashboard() {
               >
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-lg font-semibold text-secondary-200">{booking.title}</h3>
+                    <h3 className="text-lg font-semibold text-secondary-200">
+                      {booking.event_id ? `Event #${booking.event_id}` : `Space #${booking.space_id}`}
+                    </h3>
                     <p className="text-sm text-secondary-200 mt-1">
-                      {booking.date} {booking.startTime && `• ${booking.startTime}`}
-                      {booking.time && `• ${booking.time}`}
+                      Booked {new Date(booking.created_at).toLocaleDateString()}
                     </p>
-                    <p className="text-sm text-secondary-200">
-                      Host: {booking.host?.name || 'N/A'}
-                    </p>
+                    <p className="text-sm text-secondary-200">Qty: {booking.quantity}</p>
                   </div>
                   <div className="text-right">
                     <span
                       className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                        booking.status === 'confirmed'
+                        booking.payment_status === 'paid'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
-                      {booking.status}
+                      {booking.payment_status}
                     </span>
                     <p className="text-lg font-semibold text-secondary-200 mt-2">
-                      ${booking.price}
+                      ${Number(booking.total_price).toFixed(2)}
                     </p>
                   </div>
                 </div>

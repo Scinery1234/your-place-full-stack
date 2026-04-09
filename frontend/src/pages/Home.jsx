@@ -1,9 +1,6 @@
-import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
 export default function Home() {
-  const { login, logout } = useAuth();
-
   return (
     <div className="bg-primary-300 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-12">

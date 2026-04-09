@@ -224,13 +224,7 @@ function HostApplicationForm() {
     try {
       setError('');
 
-      await submitHostApplication({
-        offering_type: data.offeringType,
-        space_types: data.spaceTypes,
-        categories: data.categories,
-        capacity: data.capacity,
-        notes: data.notes,
-      });
+      await submitHostApplication(data);
 
       setSuccess(true);
 
