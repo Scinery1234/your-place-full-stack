@@ -4,6 +4,11 @@ import { getSpacesById, getEventsById } from '@/api/listings';
 import { createBooking } from '@/api/bookings';
 import { useAuth } from '@/contexts/AuthContext';
 import Button from '@/components/ui/Button';
+import { getMockSpace } from '@/mocks/spaces';
+import { getMockEvent } from '@/mocks/events';
+
+// Mock IDs are strings like 'space-1'; real API IDs are integers
+const isMockId = (id) => !/^\d+$/.test(id);
 
 export default function ListingDetail() {
   const { type, id } = useParams();
@@ -17,8 +22,16 @@ export default function ListingDetail() {
     setLoading(true);
     setError(null);
 
-    const fetch = type === 'event' ? getEventsById(id) : getSpacesById(id);
+    // If the ID is a mock string ID, return from local mock data immediately
+    if (isMockId(id)) {
+      const mock = type === 'event' ? getMockEvent(id) : getMockSpace(id);
+      setListing(mock ?? null);
+      if (!mock) setError('Listing not found.');
+      setLoading(false);
+      return;
+    }
 
+    const fetch = type === 'event' ? getEventsById(id) : getSpacesById(id);
     fetch
       .then((res) => setListing(res?.data ?? null))
       .catch(() => setError('Listing not found or failed to load.'))
@@ -76,10 +89,12 @@ export default function ListingDetail() {
   }
 
   const isEvent = type === 'event';
-  const title = isEvent ? listing.title : listing.name;
-  const location = isEvent
-    ? `${listing.space_name ? listing.space_name + ' · ' : ''}${listing.city ?? ''}`
-    : `${listing.address ? listing.address + ', ' : ''}${listing.city ?? ''}${listing.country ? ', ' + listing.country : ''}`;
+  // Handle both real API shape and mock shape
+  const title = listing.title || listing.name;
+  const price = listing.price_per_spot ?? listing.price ?? null;
+  const locationStr = listing.city
+    ? `${listing.space_name ? listing.space_name + ' · ' : ''}${listing.city}${listing.country ? ', ' + listing.country : ''}`
+    : listing.location ?? (listing.address ?? '');
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -97,15 +112,15 @@ export default function ListingDetail() {
               </span>
               <h1 className="text-3xl font-bold font-display text-secondary-200">{title}</h1>
             </div>
-            {isEvent && listing.price_per_spot != null && (
+            {price != null && (
               <p className="text-2xl font-bold text-primary-200 flex-shrink-0">
-                ${Number(listing.price_per_spot).toFixed(2)}<span className="text-sm font-normal text-gray-500">/spot</span>
+                ${Number(price).toFixed(2)}<span className="text-sm font-normal text-gray-500">/spot</span>
               </p>
             )}
           </div>
 
-          {location && (
-            <p className="text-gray-500 mt-2">{location}</p>
+          {locationStr && (
+            <p className="text-gray-500 mt-2">{locationStr}</p>
           )}
 
           {isEvent && listing.category && (
@@ -128,17 +143,16 @@ export default function ListingDetail() {
             <p className="text-xs text-gray-500 mb-1">Capacity</p>
             <p className="text-lg font-semibold text-secondary-200">{listing.capacity}</p>
           </div>
-          {isEvent && listing.start_at && (
+          {isEvent && (listing.start_at || listing.date) && (
             <div className="bg-gray-50 rounded-lg p-4">
               <p className="text-xs text-gray-500 mb-1">Date & Time</p>
               <p className="text-sm font-semibold text-secondary-200">
-                {new Date(listing.start_at).toLocaleString(undefined, {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {listing.start_at
+                  ? new Date(listing.start_at).toLocaleString(undefined, {
+                      weekday: 'short', month: 'short', day: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })
+                  : `${listing.date}${listing.time ? ' · ' + listing.time : ''}`}
               </p>
             </div>
           )}
