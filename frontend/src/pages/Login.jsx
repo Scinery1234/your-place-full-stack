@@ -116,6 +116,29 @@ export default function Login() {
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
           </form>
+
+          {/* Demo login */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <p className="text-sm text-secondary-200 text-center mb-3">
+              No account? Try a demo:
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { loginAsUser(); navigate(from); }}
+                className="flex-1 border-2 border-primary-300 hover:bg-primary-300 text-primary-300 hover:text-primary-100 font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Demo User
+              </button>
+              <button
+                type="button"
+                onClick={() => { loginAsHost(); navigate(from); }}
+                className="flex-1 border-2 border-primary-200 hover:bg-primary-200 text-primary-200 hover:text-primary-100 font-semibold py-2 px-4 rounded-lg transition-colors text-sm"
+              >
+                Demo Host
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Right column */}
