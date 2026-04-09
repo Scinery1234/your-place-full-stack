@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getSpaces } from '@/api/listings';
-import { getEvents } from '@/api/listings';
+import { getSpaces, getEvents } from '@/api/listings';
+import { mockSpaces } from '@/mocks/spaces';
+import { mockEvents } from '@/mocks/events';
 
 const TABS = ['spaces', 'events'];
 
@@ -10,20 +11,20 @@ export default function Explore() {
   const [spaces, setSpaces] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     setLoading(true);
-    setError(null);
 
     const fetches = [
-      getSpaces().then((res) => setSpaces(res?.data ?? [])),
-      getEvents().then((res) => setEvents(res?.data ?? [])),
+      getSpaces()
+        .then((res) => setSpaces(res?.data ?? []))
+        .catch(() => setSpaces(mockSpaces)),
+      getEvents()
+        .then((res) => setEvents(res?.data ?? []))
+        .catch(() => setEvents(mockEvents)),
     ];
 
-    Promise.all(fetches)
-      .catch(() => setError('Failed to load listings. Please try again.'))
-      .finally(() => setLoading(false));
+    Promise.all(fetches).finally(() => setLoading(false));
   }, []);
 
   return (
@@ -52,19 +53,9 @@ export default function Explore() {
         <div className="text-center py-16 text-secondary-200">Loading listings...</div>
       )}
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6">
-          {error}
-        </div>
-      )}
+      {!loading && tab === 'spaces' && <SpaceGrid spaces={spaces} />}
 
-      {!loading && !error && tab === 'spaces' && (
-        <SpaceGrid spaces={spaces} />
-      )}
-
-      {!loading && !error && tab === 'events' && (
-        <EventGrid events={events} />
-      )}
+      {!loading && tab === 'events' && <EventGrid events={events} />}
     </div>
   );
 }
@@ -86,9 +77,12 @@ function SpaceGrid({ spaces }) {
           to={`/listings/space/${space.id}`}
           className="block border border-gray-200 rounded-lg p-5 hover:shadow-lg transition-shadow bg-white"
         >
-          <h2 className="text-lg font-semibold text-secondary-200 mb-1">{space.name}</h2>
+          <h2 className="text-lg font-semibold text-secondary-200 mb-1">
+            {space.name || space.title}
+          </h2>
           <p className="text-sm text-gray-500 mb-3">
-            {space.city}{space.country ? `, ${space.country}` : ''}
+            {space.city || space.location}
+            {space.country ? `, ${space.country}` : ''}
           </p>
           {space.description && (
             <p className="text-sm text-gray-600 line-clamp-2 mb-3">{space.description}</p>

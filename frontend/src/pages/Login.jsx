@@ -13,7 +13,7 @@ const loginSchema = z.object({
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, loginAsUser, loginAsHost } = useAuth();
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
 
@@ -118,21 +118,50 @@ export default function Login() {
           </form>
         </div>
 
-        {/* Sign Up Card - 1 right side column on large screens */}
-        <div className="lg:col-span-1 bg-primary-100 rounded-lg shadow-lg shadow-primary-100/50 p-8 flex flex-col justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold font-display text-secondary-200 mb-4">
-              Don&apos;t have an account?
+        {/* Right column */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          {/* Sign Up Card */}
+          <div className="bg-primary-100 rounded-lg shadow-lg shadow-primary-100/50 p-8 flex flex-col justify-center">
+            <div className="text-center">
+              <h2 className="text-2xl font-bold font-display text-secondary-200 mb-4">
+                Don&apos;t have an account?
+              </h2>
+              <p className="text-secondary-200 mb-6">
+                Join up today to book experiences, or become a host.
+              </p>
+              <Link
+                to="/register"
+                className="inline-block w-full bg-primary-300 hover:bg-primary-200 text-primary-100 font-semibold py-3 px-6 rounded-lg transition-colors"
+              >
+                Create Account
+              </Link>
+            </div>
+          </div>
+
+          {/* Demo Login Card */}
+          <div className="bg-primary-100 rounded-lg shadow-lg shadow-primary-100/50 p-8">
+            <h2 className="text-xl font-bold font-display text-secondary-200 mb-2">
+              Try a demo account
             </h2>
-            <p className="text-secondary-200 mb-6">
-              Join up today to book experiences, or become a host.
+            <p className="text-sm text-secondary-200 mb-4">
+              Explore the app without creating an account.
             </p>
-            <Link
-              to="/register"
-              className="inline-block w-full bg-primary-300 hover:bg-primary-200 text-primary-100 font-semibold py-3 px-6 rounded-lg transition-colors"
-            >
-              Create Account
-            </Link>
+            <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                onClick={() => { loginAsUser(); navigate(from); }}
+                className="w-full border-2 border-primary-300 hover:bg-primary-300 text-primary-300 hover:text-primary-100 font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Demo User
+              </button>
+              <button
+                type="button"
+                onClick={() => { loginAsHost(); navigate(from); }}
+                className="w-full border-2 border-primary-200 hover:bg-primary-200 text-primary-200 hover:text-primary-100 font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Demo Host
+              </button>
+            </div>
           </div>
         </div>
       </div>
