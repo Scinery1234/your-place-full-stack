@@ -21,7 +21,7 @@ const registerSchema = z
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, registerDemo } = useAuth();
   const [error, setError] = useState('');
 
   const {
@@ -49,7 +49,13 @@ export default function Register() {
       // Redirect to home after successful registration
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create account. Please try again.');
+      if (err.response) {
+        setError(err.response.data?.message || 'Failed to create account. Please try again.');
+      } else {
+        // Backend unavailable — create a local demo account with their details
+        registerDemo(data.fullName, data.email);
+        navigate('/');
+      }
     }
   };
 

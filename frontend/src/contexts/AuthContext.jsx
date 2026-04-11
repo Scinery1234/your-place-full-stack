@@ -91,14 +91,24 @@ export function AuthProvider({ children }) {
     setUser(nextUser);
   };
 
+  // Register as a local demo account when backend is unavailable
+  const registerDemo = (fullName, email) => {
+    const nextUser = { id: `demo-${Date.now()}`, email, fullName, role: 'user' };
+    localStorage.setItem(STORAGE_TOKEN_KEY, 'demo-token-user');
+    localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(nextUser));
+    setUser(nextUser);
+  };
+
   const logout = () => {
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
     setUser(null);
   };
 
+  const isDemoMode = !!user && localStorage.getItem(STORAGE_TOKEN_KEY)?.startsWith('demo-token');
+
   const value = useMemo(
-    () => ({ user, login, register, logout, loading, loginAsUser, loginAsHost }),
+    () => ({ user, login, register, logout, loading, loginAsUser, loginAsHost, registerDemo, isDemoMode }),
     [user, loading]
   );
 

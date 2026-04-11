@@ -12,7 +12,7 @@ const isMockId = (id) => !/^\d+$/.test(id);
 
 export default function ListingDetail() {
   const { type, id } = useParams();
-  const { user } = useAuth();
+  const { user, isDemoMode } = useAuth();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,6 +41,11 @@ export default function ListingDetail() {
   const handleBook = async () => {
     if (!user) return;
     setBooking((b) => ({ ...b, status: 'loading', error: null }));
+
+    if (isDemoMode) {
+      setTimeout(() => setBooking((b) => ({ ...b, status: 'success' })), 600);
+      return;
+    }
 
     try {
       const payload =

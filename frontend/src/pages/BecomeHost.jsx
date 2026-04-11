@@ -22,38 +22,37 @@ const applicationSchema = z.object({
 });
 
 export default function BecomeHost() {
-  const { user } = useAuth();
+  const { user, isDemoMode } = useAuth();
   const navigate = useNavigate();
   const [applicationStatus, setApplicationStatus] = useState(null);
   const [loading, setLoading] = useState(true);
 
- // Check if user already has an application
-useEffect(() => {
-  let cancelled = false;
+  // Check if user already has an application
+  useEffect(() => {
+    let cancelled = false;
 
-  const loadStatus = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    const loadStatus = async () => {
+      if (!user || isDemoMode) {
+        setLoading(false);
+        return;
+      }
 
-    try {
-      // NOTE: your apiClient interceptor returns response.data already
-      const status = await getMyApplicationStatus();
-      if (!cancelled) setApplicationStatus(status);
-    } catch {
-      if (!cancelled) setApplicationStatus(null);
-    } finally {
-      if (!cancelled) setLoading(false);
-    }
-  };
+      try {
+        const status = await getMyApplicationStatus();
+        if (!cancelled) setApplicationStatus(status);
+      } catch {
+        if (!cancelled) setApplicationStatus(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
 
-  loadStatus();
+    loadStatus();
 
-  return () => {
-    cancelled = true;
-  };
-}, [user]);
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isDemoMode]);
 
   // If already a host/admin, redirect to dashboard
   useEffect(() => {
@@ -200,6 +199,7 @@ function BecomeHostInfoPage() {
 
 // Application form component
 function HostApplicationForm() {
+  const { isDemoMode } = useAuth();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
@@ -224,8 +224,12 @@ function HostApplicationForm() {
     try {
       setError('');
 
-      await submitHostApplication(data);
+      if (isDemoMode) {
+        setSuccess(true);
+        return;
+      }
 
+      await submitHostApplication(data);
       setSuccess(true);
 
       // Redirect after 2 seconds

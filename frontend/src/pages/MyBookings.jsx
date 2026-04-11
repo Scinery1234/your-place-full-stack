@@ -1,25 +1,34 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { getMyBooking } from '@/api/bookings';
+import { mockUserBookings } from '@/mocks/bookings';
 import Button from '@/components/ui/Button';
 
 const STATUS_STYLES = {
   paid: 'bg-green-100 text-green-800',
+  confirmed: 'bg-green-100 text-green-800',
   pending: 'bg-yellow-100 text-yellow-800',
   cancelled: 'bg-red-100 text-red-800',
 };
 
 export default function MyBookings() {
+  const { isDemoMode } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (isDemoMode) {
+      setBookings(mockUserBookings);
+      setLoading(false);
+      return;
+    }
     getMyBooking('mine')
       .then((res) => setBookings(res?.data ?? []))
       .catch(() => setError('Failed to load bookings. Please try again.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isDemoMode]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -47,15 +56,22 @@ export default function MyBookings() {
       {!loading && bookings.length > 0 && (
         <div className="space-y-4">
           {bookings.map((booking) => {
-            const isEvent = !!booking.event_id;
-            const listingLabel = isEvent
-              ? `Event #${booking.event_id}`
-              : `Space #${booking.space_id}`;
-            const detailPath = isEvent
+            // Normalise across real API shape and mock shape
+            const label = booking.title
+              || (booking.event_id ? `Event #${booking.event_id}` : `Space #${booking.space_id}`);
+            const detailPath = booking.eventId
+              ? `/listings/event/${booking.eventId}`
+              : booking.spaceId
+              ? `/listings/space/${booking.spaceId}`
+              : booking.event_id
               ? `/listings/event/${booking.event_id}`
               : `/listings/space/${booking.space_id}`;
-            const statusStyle =
-              STATUS_STYLES[booking.payment_status] ?? 'bg-gray-100 text-gray-800';
+            const statusText = booking.status || booking.payment_status || 'pending';
+            const statusStyle = STATUS_STYLES[statusText] ?? 'bg-gray-100 text-gray-800';
+            const price = booking.price ?? Number(booking.total_price ?? 0);
+            const dateStr = booking.date
+              || (booking.created_at ? new Date(booking.created_at).toLocaleDateString() : '');
+            const timeStr = booking.startTime || booking.time || '';
 
             return (
               <div
@@ -65,21 +81,21 @@ export default function MyBookings() {
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
                     <Link to={detailPath} className="hover:underline">
-                      <h2 className="text-lg font-semibold text-secondary-200">{listingLabel}</h2>
+                      <h2 className="text-lg font-semibold text-secondary-200">{label}</h2>
                     </Link>
                     <p className="text-sm text-gray-500 mt-1">
-                      Booked on {new Date(booking.created_at).toLocaleDateString()}
+                      {dateStr}{timeStr ? ` · ${timeStr}` : ''}
                     </p>
-                    <p className="text-sm text-secondary-200 mt-1">
-                      Quantity: {booking.quantity}
-                    </p>
+                    {booking.host?.name && (
+                      <p className="text-sm text-gray-500">Host: {booking.host.name}</p>
+                    )}
                   </div>
                   <div className="text-right flex-shrink-0">
                     <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${statusStyle}`}>
-                      {booking.payment_status}
+                      {statusText}
                     </span>
                     <p className="text-xl font-bold text-secondary-200 mt-2">
-                      ${Number(booking.total_price).toFixed(2)}
+                      ${Number(price).toFixed(2)}
                     </p>
                   </div>
                 </div>
